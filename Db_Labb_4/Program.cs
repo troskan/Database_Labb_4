@@ -19,7 +19,7 @@ namespace Db_Labb_4
         }
         static void MainMenu()
         {
-            string[] menuOptions = { "\t1. Get all students", "\t2. Get all students in a class", "\t3. Add new staff", "\t4. Exit" };
+            string[] menuOptions = { "\t1. Get all students", "\t2. Get all students in a class", "\t3. Add new staff", "\t4. Display", "\t5. X", "\t6. X", "\t7. Exit" };
             int selectedOption = 0;
 
             while (true)
@@ -68,6 +68,19 @@ namespace Db_Labb_4
 
                         case 2:
                             AddStaffMenu();
+                            Console.ReadKey();
+                            break;
+
+                        case 3:
+                            DisplayStaffAtDepartments();
+                            Console.ReadKey();
+                            break;
+
+                        case 4:
+                            Console.ReadKey();
+                            break;
+
+                        case 5:
                             Console.ReadKey();
                             break;
 
@@ -224,6 +237,68 @@ namespace Db_Labb_4
                 Console.Write($" SSN: {FormatSSN(item.Ssn)}");
                 Console.WriteLine();
             }
+        }
+        static void DisplayStaffAtDepartments()
+        {
+            var staff = DB.Staff.ToList();
+            var dep = DB.Departments.ToList();
+            var staffDep = DB.StaffDeps.ToList();
+
+            var departmentResult = (from s in staff
+                                    join staffd in staffDep on s.StaffId equals staffd.StaffId
+                                    join d in dep on staffd.DepId equals d.DepId
+                                    group s by d.DepName into grp
+                                    select new
+                                    {
+                                        DepartmentName = grp.Key,
+                                        StaffMembers = grp.ToList()
+                                    }).ToList();
+
+            foreach (var item in departmentResult)
+            {
+                Console.WriteLine("Department: " + item.DepartmentName);
+                Console.WriteLine("Staff Members:");
+                foreach (var staffMember in item.StaffMembers)
+                {
+                    Console.WriteLine("  " + staffMember.Fname);
+                }
+            }
+
+            //var result = (from s in staff
+            //              join sd in staffDep on s.Id equals sd.StaffId
+            //              join d in dep on sd.DepId equals d.Id
+            //              group s by d.DepName into grp
+            //              select new
+            //              {
+            //                  DepartmentName = grp.Key,
+            //                  StaffMembers = grp.ToList()
+            //              }).ToList();
+
+            //foreach (var item in result)
+            //{
+            //    Console.WriteLine("Department: " + item.DepartmentName);
+            //    Console.WriteLine("Staff Members:");
+            //    foreach (var staffMember in item.StaffMembers)
+            //    {
+            //        Console.WriteLine("  " + staffMember.Name);
+            //    }
+            //}
+
+
+            //var query = from student in students
+            //            join stuCourse in studentCourses on student.StudentId equals stuCourse.StudentId
+            //            join course in courses on stuCourse.CourseId equals course.CourseId
+            //            select new { student.Fname, student.StudentId, course.CourseName };
+
+
+            //foreach (var item in query)
+            //{
+            //    Console.Write(item.ToString());
+            //}
+
+
+            //###################################
+
         }
         static string DisplayCourses(int input)
         {
