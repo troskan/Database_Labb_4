@@ -4,6 +4,7 @@ using System;
 using System.Diagnostics.Metrics;
 using System.Globalization;
 using System.Reflection.Metadata.Ecma335;
+using System.Security.Cryptography.X509Certificates;
 using System.Text;
 
 namespace Db_Labb_4
@@ -19,7 +20,7 @@ namespace Db_Labb_4
         }
         static void MainMenu()
         {
-            string[] menuOptions = { "\t1. Get all students", "\t2. Get all students in a class", "\t3. Add new staff", "\t4. Display", "\t5. X", "\t6. X", "\t7. Exit" };
+            string[] menuOptions = { "\t1. Get all students", "\t2. Get all students in a class", "\t3. Add new staff", "\t4. Display departments", "\t5. Check course status", "\t6. Exit" };
             int selectedOption = 0;
 
             while (true)
@@ -77,10 +78,7 @@ namespace Db_Labb_4
                             break;
 
                         case 4:
-                            Console.ReadKey();
-                            break;
-
-                        case 5:
+                            DisplayIfCoursesActive();
                             Console.ReadKey();
                             break;
 
@@ -240,29 +238,59 @@ namespace Db_Labb_4
         }
         static void DisplayStaffAtDepartments()
         {
+
             var staff = DB.Staff.ToList();
             var dep = DB.Departments.ToList();
             var staffDep = DB.StaffDeps.ToList();
+            var staffR = DB.StaffRoles.ToList();
+            var roles = DB.Roles.ToList();
 
-            var departmentResult = (from s in staff
-                                    join staffd in staffDep on s.StaffId equals staffd.StaffId
-                                    join d in dep on staffd.DepId equals d.DepId
-                                    group s by d.DepName into grp
-                                    select new
-                                    {
-                                        DepartmentName = grp.Key,
-                                        StaffMembers = grp.ToList()
-                                    }).ToList();
 
-            foreach (var item in departmentResult)
+            var result = (from s in staff
+                          join staffd in staffDep on s.StaffId equals staffd.StaffId
+                          join d in dep on staffd.DepId equals d.DepId
+                          join c in staffR on s.StaffId equals c.StaffId
+                          join f in roles on c.RoleId equals f.RoleId
+                          where f.RoleName == "Teacher"
+                          group s by d.DepName into grp
+                          select new
+                          {
+                              DepartmentName = grp.Key,
+                              StaffMembers = grp.Count()
+                          }).ToList();
+            Console.WriteLine();
+            TextDarkGreen("------------------------------------------------#");
+            foreach (var item in result)
             {
-                Console.WriteLine("Department: " + item.DepartmentName);
-                Console.WriteLine("Staff Members:");
-                foreach (var staffMember in item.StaffMembers)
-                {
-                    Console.WriteLine("  " + staffMember.Fname);
-                }
+                Console.Write("\n\tDepartment: "); TextRed(item.DepartmentName);
+                Console.Write("\n");
+                Console.Write("\tNumber of "); TextBlue("teachers: ");
+                Console.Write(item.StaffMembers + "\n");
+                
+                TextDarkGreen("------------------------------------------------#");
             }
+
+  
+            //var testDep = DB.StaffDeps
+            //.Where(x => x.DepId == 4 )
+            //.Select(x => x.StaffId);
+
+            //int counter = 0;
+
+            //foreach (var item in testDep)
+            //{
+            //    counter++;
+            //}
+            //Console.WriteLine(counter);
+
+
+
+            //var query = from Staffs in staff
+            //            join StaffDep in staffDep on Staffs.StaffId equals 
+
+
+
+
 
             //var result = (from s in staff
             //              join sd in staffDep on s.Id equals sd.StaffId
@@ -300,6 +328,28 @@ namespace Db_Labb_4
             //###################################
 
         }
+        static void DisplayIfCoursesActive()
+        {
+            var courses = DB.Courses.ToList();
+
+            TextRed("\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
+            foreach (var item in courses)
+            {
+
+                if (item.IsActive == true)
+                {
+                    Console.Write($"\n\tCourse \"{item.CourseName}\" is currently: "); TextDarkGreen("Active!\n");
+                }
+                else
+                {
+                    Console.Write($"\n\tCourse \"{item.CourseName}\" is currently: "); TextDarkGreen("Closed!\n");
+                }
+
+            }
+            TextRed("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
+
+
+        }
         static string DisplayCourses(int input)
         {
             //Loop through results of collecion
@@ -308,11 +358,15 @@ namespace Db_Labb_4
             string course = "";
             foreach (Course item in courses)
             {
+
+
                 counter++;
                 if (counter == input)
                 {
                     course = $"Course ID: {item.CourseId} | Course Name: {item.CourseName} | " +
                     $"Course Description: {item.CourseDesc}";
+
+
                 }
             }
             return course;
@@ -537,6 +591,24 @@ namespace Db_Labb_4
         static void TextRed(string yourText)
         {
             Console.ForegroundColor = ConsoleColor.Red;
+            Console.Write(yourText);
+            Console.ResetColor();
+        }
+        static void TextBlue(string yourText)
+        {
+            Console.ForegroundColor = ConsoleColor.Blue;
+            Console.Write(yourText);
+            Console.ResetColor();
+        }
+        static void TextDarkGreen(string yourText)
+        {
+            Console.ForegroundColor = ConsoleColor.DarkGreen;
+            Console.Write(yourText);
+            Console.ResetColor();
+        }
+        static void TextMagneta(string yourText)
+        {
+            Console.ForegroundColor = ConsoleColor.DarkBlue;
             Console.Write(yourText);
             Console.ResetColor();
         }
